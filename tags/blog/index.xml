@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>blog on David Dreggors</title>
+    <link>https://ddreggors.github.io/tags/blog/</link>
+    <description>Recent content in blog on David Dreggors</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <managingEditor>ddreggors@redhat.com (David Dreggors)</managingEditor>
+    <webMaster>ddreggors@redhat.com (David Dreggors)</webMaster>
+    <lastBuildDate>Thu, 27 May 2021 08:49:31 -0400</lastBuildDate><atom:link href="https://ddreggors.github.io/tags/blog/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Hello World</title>
+      <link>https://ddreggors.github.io/post/hello-world/</link>
+      <pubDate>Thu, 27 May 2021 08:49:31 -0400</pubDate>
+      <author>ddreggors@redhat.com (David Dreggors)</author>
+      <guid>https://ddreggors.github.io/post/hello-world/</guid>
+      <description>Hello World David Dreggors ddreggors@redhat.com 2021-05-27
+The title, as cliché as it is in the software world, still seems fitting. After all this blog post is my first here and the internet is global, so it is my introduction to the world. Add to that the fact that most projects today start with a Hello World example. So here is mine.
+I have spent the better part of my life dedicated to computers (hardware, software, and the use of).</description>
+    </item>
+    
+  </channel>
+</rss>
