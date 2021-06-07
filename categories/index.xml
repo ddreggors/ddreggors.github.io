@@ -6,7 +6,7 @@
     <description>Recent content in Categories on David Dreggors</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <managingEditor>ddreggors@redhat.com (David Dreggors)</managingEditor>
-    <webMaster>ddreggors@redhat.com (David Dreggors)</webMaster><atom:link href="https://ddreggors.github.io/categories/index.xml" rel="self" type="application/rss+xml" />
+    <managingEditor>david.dreggors@redhat.com (David Dreggors)</managingEditor>
+    <webMaster>david.dreggors@redhat.com (David Dreggors)</webMaster><atom:link href="https://ddreggors.github.io/categories/index.xml" rel="self" type="application/rss+xml" />
   </channel>
 </rss>

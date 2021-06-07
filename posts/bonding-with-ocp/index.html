@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html class="no-js" lang="en-us">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="theme-color" content="#1b1b1b">
+	<title>Bonding With OpenShift | David Dreggors</title>
+	<script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script>
+	<meta name="description" content="">
+	<link rel="stylesheet" href="/css/bundle.css">
+	<link rel="icon" href="/icons/16.png" sizes="16x16" type="image/png">
+	<link rel="icon" href="/icons/32.png" sizes="32x32" type="image/png">
+		
+</head>
+<body class="body kind-page">
+	<header class="header">
+	<a class="logo" href="/">David Dreggors</a>
+	
+</header>
+	<div class="primary">
+	
+	<main class="main">
+		
+		<div class="single block">
+			<article class="entry">
+				<h1 class="entry__title">Bonding With OpenShift</h1>
+<details class="entry__toc toc" >
+	<summary class="toc__title">Table of Contents</summary>
+	<nav id="TableOfContents">
+  <ul>
+    <li><a href="#the-issues">The issues</a>
+      <ul>
+        <li><a href="#problem-1-dhcp-mac-address-matching">Problem #1 (DHCP Mac address matching)</a></li>
+        <li><a href="#problem-2-static-files-with-machine-configs">Problem #2 (Static files with machine configs)</a></li>
+        <li><a href="#problem-3-no-way-to-change-a-managed-file">Problem #3 (No way to change a managed file)</a></li>
+      </ul>
+    </li>
+    <li><a href="#the-solution">The solution</a>
+      <ul>
+        <li><a href="#script-it">Script it</a></li>
+        <li><a href="#running-the-script">Running the script</a></li>
+        <li><a href="#only-change-when-needed">Only change when needed</a></li>
+        <li><a href="#building-the-machine-config">Building the machine config</a></li>
+      </ul>
+    </li>
+    <li><a href="#automating-this-solution">Automating this solution</a></li>
+  </ul>
+</nav>
+</details>
+				<div class="entry__content"><h1 id="sometimes-we-just-want-to-bond-with-openshift">Sometimes we just want to bond with OpenShift&hellip;</h1>
+<p>David Dreggors <a href="mailto:david.dreggors@redhat.com">david.dreggors@redhat.com</a>
+2021-06-06</p>
+<h2 id="the-issues">The issues</h2>
+<p>You may find yourself needing to customize your nodes network devices, this will often mean that you require interfaces (nic) bonding. On a standalone Linux host this is pretty straight forward, however managing your cluster nodes is not as easy as logging in and changing the interfaces. OpenShift handles changes on the nodes via machine configs and the machine config operator. This means you now need to understand some of the problems we face&hellip;</p>
+<ol>
+<li>DHCP Can be tricky with bonded interface</li>
+<li>Machine configs create files that are static in nature</li>
+<li>Files managed by machine configs are monitored for changes and will revert to the managed  version if changed</li>
+</ol>
+<p>What does this all mean for you? Not much in most cases&hellip; consider you have a configuration file like <code>/etc/hosts</code>, that file is meant to be static. You add entries and leave them alone. In the case of binding we are not so cut and dry, we may need a more dynamic approach.</p>
+<h3 id="problem-1-dhcp-mac-address-matching">Problem #1 (DHCP Mac address matching)</h3>
+<p>We often use DHCP to handle IP address allocation and that requires matching your node&rsquo;s MAC address to statically set the IP address. A bond device is a virtual device that takes on the MAC address of the first slave interface it finds on boot. This becomes a very real issue if OpenShift if the node gets a new IP due to the DHCP server seeing the request come in from a different MAC address because slave 2 (secondary nic) started before slave 1 (primary nic). The answer is a great little trick provided by the OS networking stack, the bond device config has a setting for this called <code>DHCP_CLIENT_ID</code> in the bond device config!</p>
+<h3 id="problem-2-static-files-with-machine-configs">Problem #2 (Static files with machine configs)</h3>
+<p>Machine configs are static and we deploy them to all nodes in a machine config pool (all workers or all masters for example) which means that we cannot generate config files per node. If we hard code a MAC address directly in our machine config, every node in a pool will be configured to send the same MAC address to your DHCP server and all would get the same IP. So that means we need to change that <code>DHCP_CLIENT_ID</code> in each bond device we create on each node.</p>
+<h3 id="problem-3-no-way-to-change-a-managed-file">Problem #3 (No way to change a managed file)</h3>
+<p>When a file is managed by a machine config in OpenShift, the machine config operator watches that file for changes and will immediately put that file back to a state that matches the rendered machine config within the cluster for this pool. This means we cannot now go change that file&hellip; it would immediately get reverted.</p>
+<p>OK, so how do we handle this?</p>
+<h2 id="the-solution">The solution</h2>
+<h3 id="script-it">Script it</h3>
+<p>One solution is to create a script that generates the bond device and slave device configs and manage that script with a machine config.</p>
+<p><em>Example add-mac.sh</em></p>
+<pre><code>#!/bin/bash
+
+# bond0 creation
+cat &lt;&lt;EOF &gt; /etc/sysconfig/network-scripts/ifcfg-bond0
+DEVICE=bond0
+TYPE=Bond
+NAME=bond0
+BONDING_MASTER=yes
+BOOTPROTO=dhcp
+ONBOOT=yes
+MTU=1500
+DHCP_CLIENT_ID=$(ip link show dev ens1f0 | awk '/link/ {print $2}')
+BONDING_OPTS=&quot;mode=802.3ad,miimon=500&quot;
+IPV6INIT=no
+DHCPV6C=no
+IPV6INIT=no
+IPV6_AUTOCONF=no
+IPV6_DEFROUTE=no
+IPV6_PEERDNS=no
+IPV6_PEERROUTES=no
+IPV6_FAILURE_FATAL=no
+IPV4_DHCP_TIMEOUT=2147483647
+EOF
+
+# bond0 members creation
+cat &lt;&lt;EOF &gt; /etc/sysconfig/network-scripts/ifcfg-ens1f0
+TYPE=Ethernet
+DEVICE=ens1f0
+BOOTPROTO=none
+ONBOOT=yes
+MASTER=bond0
+SLAVE=yes
+EOF
+
+cat &lt;&lt;EOF &gt; /etc/sysconfig/network-scripts/ifcfg-ens1f1
+TYPE=Ethernet
+DEVICE=ens1f1
+BOOTPROTO=none
+ONBOOT=yes
+MASTER=bond0
+SLAVE=yes
+EOF
+</code></pre><h3 id="running-the-script">Running the script</h3>
+<p>By itself that script would just be created on each node and could in-fact gather information specific to THIS node and build these configs dynamically. However, we need something to to run this script, something like a systemd service!</p>
+<p><em>Example systemd unit</em></p>
+<pre><code>[Unit]
+Description=Configure BOND
+After=ignition-firstboot-complete.service
+Before=nodeip-configuration.service kubelet.service crio.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/add-mac.sh
+
+[Install]
+WantedBy=multi-user.target
+
+</code></pre><h3 id="only-change-when-needed">Only change when needed</h3>
+<p>Awesome&hellip; now we add a systemd service to our machine config and all is well right? Unless we consider the fact that this script is called on every reboot and rebuilds these files every time it runs. So what can we do to make it run only once? Simple, have the script create a stub file on completion and place the interface creation in an if block that checks for that stub file&hellip;</p>
+<p><em>Example add-mac.sh script</em></p>
+<pre><code>#!/bin/bash
+
+if [ ! -f /var/lib/bonds-configured.stamp ]; then
+  # bond0 creation
+  cat &lt;&lt;EOF &gt; /etc/sysconfig/network-scripts/ifcfg-bond0
+  DEVICE=bond0
+  TYPE=Bond
+  NAME=bond0
+  BONDING_MASTER=yes
+  BOOTPROTO=dhcp
+  ONBOOT=yes
+  MTU=1500
+  DHCP_CLIENT_ID=$(ip link show dev ens1f0 | awk '/link/ {print $2}')
+  BONDING_OPTS=&quot;mode=802.3ad,miimon=500&quot;
+  IPV6INIT=no
+  DHCPV6C=no
+  IPV6INIT=no
+  IPV6_AUTOCONF=no
+  IPV6_DEFROUTE=no
+  IPV6_PEERDNS=no
+  IPV6_PEERROUTES=no
+  IPV6_FAILURE_FATAL=no
+  IPV4_DHCP_TIMEOUT=2147483647
+  EOF
+
+  # bond0 members creation
+  cat &lt;&lt;EOF &gt; /etc/sysconfig/network-scripts/ifcfg-ens1f0
+  TYPE=Ethernet
+  DEVICE=ens1f0
+  BOOTPROTO=none
+  ONBOOT=yes
+  MASTER=bond0
+  SLAVE=yes
+  EOF
+
+  cat &lt;&lt;EOF &gt; /etc/sysconfig/network-scripts/ifcfg-ens1f1
+  TYPE=Ethernet
+  DEVICE=ens1f1
+  BOOTPROTO=none
+  ONBOOT=yes
+  MASTER=bond0
+  SLAVE=yes
+  EOF
+
+  touch /var/lib/bonds-configured.stamp
+fi
+</code></pre><h3 id="building-the-machine-config">Building the machine config</h3>
+<p>The first thing we want to do is encrypt that script into a base64 string:</p>
+<pre><code>$ base64 -w0 add-mac.sh
+IyEvYmluL2Jhc2gKCmlmIFsgISAtZiAvdmFyL2xpYi9ib25kcy1jb25maWd1cmVkLnN0YW1wIF07IHRoZW4KICAjIGJvbmQwIGNyZWF0aW9uCiAgY2F0IDw8RU9GID4gL2V0Yy9zeXNjb25maWcvbmV0d29yay1zY3JpcHRzL2lmY2ZnLWJvbmQwCiAgREVWSUNFPWJvbmQwCiAgVFlQRT1Cb25kCiAgTkFNRT1ib25kMAogIEJPTkRJTkdfTUFTVEVSPXllcwogIEJPT1RQUk9UTz1kaGNwCiAgT05CT09UPXllcwogIE1UVT0xNTAwCiAgREhDUF9DTElFTlRfSUQ9JChpcCBsaW5rIHNob3cgZGV2IGVuczFmMCB8IGF3ayAvbGluay8ge3ByaW50IH0pCiAgQk9ORElOR19PUFRTPSJtb2RlPTgwMi4zYWQsbWlpbW9uPTUwMCIKICBJUFY2SU5JVD1ubwogIERIQ1BWNkM9bm8KICBJUFY2SU5JVD1ubwogIElQVjZfQVVUT0NPTkY9bm8KICBJUFY2X0RFRlJPVVRFPW5vCiAgSVBWNl9QRUVSRE5TPW5vCiAgSVBWNl9QRUVSUk9VVEVTPW5vCiAgSVBWNl9GQUlMVVJFX0ZBVEFMPW5vCiAgSVBWNF9ESENQX1RJTUVPVVQ9MjE0NzQ4MzY0NwogIEVPRgoKICAjIGJvbmQwIG1lbWJlcnMgY3JlYXRpb24KICBjYXQgPDxFT0YgPiAvZXRjL3N5c2NvbmZpZy9uZXR3b3JrLXNjcmlwdHMvaWZjZmctZW5zMWYwCiAgVFlQRT1FdGhlcm5ldAogIERFVklDRT1lbnMxZjAKICBCT09UUFJPVE89bm9uZQogIE9OQk9PVD15ZXMKICBNQVNURVI9Ym9uZDAKICBTTEFWRT15ZXMKICBFT0YKCiAgY2F0IDw8RU9GID4gL2V0Yy9zeXNjb25maWcvbmV0d29yay1zY3JpcHRzL2lmY2ZnLWVuczFmMQogIFRZUEU9RXRoZXJuZXQKICBERVZJQ0U9ZW5zMWYxCiAgQk9PVFBST1RPPW5vbmUKICBPTkJPT1Q9eWVzCiAgTUFTVEVSPWJvbmQwCiAgU0xBVkU9eWVzCiAgRU9GCgogIHRvdWNoIC92YXIvbGliL2JvbmRzLWNvbmZpZ3VyZWQuc3RhbXAKZmkK
+</code></pre><p>We also need a bit of NetworkManager config to fix a known issue with removing routes and dropping IP address is link is lost. This is a known issue with RHEL 7 based nodes.
+<a href="https://access.redhat.com/solutions/894763">See RH Solution</a></p>
+<p><strong>98-disable.conf</strong></p>
+<pre><code>$ echo '[main]
+# Do not do automatic (DHCP/SLAAC) configuration on ethernet devices
+# with no other matching connections.
+no-auto-default=*
+# Ignore the carrier (cable plugged in) state when attempting to
+# activate static-IP connections.
+ignore-carrier=*'|base64 -w0
+
+W21haW5dCiMgRG8gbm90IGRvIGF1dG9tYXRpYyAoREhDUC9TTEFBQykgY29uZmlndXJhdGlvbiBvbiBldGhlcm5ldCBkZXZpY2VzCiMgd2l0aCBubyBvdGhlciBtYXRjaGluZyBjb25uZWN0aW9ucy4Kbm8tYXV0by1kZWZhdWx0PSoKIyBJZ25vcmUgdGhlIGNhcnJpZXIgKGNhYmxlIHBsdWdnZWQgaW4pIHN0YXRlIHdoZW4gYXR0ZW1wdGluZyB0bwojIGFjdGl2YXRlIHN0YXRpYy1JUCBjb25uZWN0aW9ucy4KaWdub3JlLWNhcnJpZXI9Kgo=
+</code></pre><p>and finally we need to create a systemd unit file that runs our script&hellip;</p>
+<pre><code>&quot;[Unit]\nDescription=Configure BOND\nAfter=ignition-firstboot-complete.service\nBefore=nodeip-configuration.service kubelet.service crio.service\n\n[Service]\nType=oneshot\nExecStart=/usr/local/bin/add-mac.sh\n\n[Install]\nWantedBy=multi-user.target&quot;
+</code></pre><p><strong>Note:</strong> Since this is a small unit file we can just us the string as is with embedded new lines</p>
+<p>Now we can create the machine config using these strings&hellip;</p>
+<pre><code>---
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  creationTimestamp: null
+  labels:
+    machineconfiguration.openshift.io/role: worker
+  name: 11-worker-bonding
+spec:
+  config:
+    ignition:
+      version: 2.2.0
+    storage:
+      files:
+      - contents:
+          source:  data:;base64,IyEvYmluL2Jhc2gKCmlmIFsgISAtZiAvdmFyL2xpYi9ib25kcy1jb25maWd1cmVkLnN0YW1wIF07IHRoZW4KICAjIGJvbmQwIGNyZWF0aW9uCiAgY2F0IDw8RU9GID4gL2V0Yy9zeXNjb25maWcvbmV0d29yay1zY3JpcHRzL2lmY2ZnLWJvbmQwCiAgREVWSUNFPWJvbmQwCiAgVFlQRT1Cb25kCiAgTkFNRT1ib25kMAogIEJPTkRJTkdfTUFTVEVSPXllcwogIEJPT1RQUk9UTz1kaGNwCiAgT05CT09UPXllcwogIE1UVT0xNTAwCiAgREhDUF9DTElFTlRfSUQ9JChpcCBsaW5rIHNob3cgZGV2IGVuczFmMCB8IGF3ayAvbGluay8ge3ByaW50IH0pCiAgQk9ORElOR19PUFRTPSJtb2RlPTgwMi4zYWQsbWlpbW9uPTUwMCIKICBJUFY2SU5JVD1ubwogIERIQ1BWNkM9bm8KICBJUFY2SU5JVD1ubwogIElQVjZfQVVUT0NPTkY9bm8KICBJUFY2X0RFRlJPVVRFPW5vCiAgSVBWNl9QRUVSRE5TPW5vCiAgSVBWNl9QRUVSUk9VVEVTPW5vCiAgSVBWNl9GQUlMVVJFX0ZBVEFMPW5vCiAgSVBWNF9ESENQX1RJTUVPVVQ9MjE0NzQ4MzY0NwogIEVPRgoKICAjIGJvbmQwIG1lbWJlcnMgY3JlYXRpb24KICBjYXQgPDxFT0YgPiAvZXRjL3N5c2NvbmZpZy9uZXR3b3JrLXNjcmlwdHMvaWZjZmctZW5zMWYwCiAgVFlQRT1FdGhlcm5ldAogIERFVklDRT1lbnMxZjAKICBCT09UUFJPVE89bm9uZQogIE9OQk9PVD15ZXMKICBNQVNURVI9Ym9uZDAKICBTTEFWRT15ZXMKICBFT0YKCiAgY2F0IDw8RU9GID4gL2V0Yy9zeXNjb25maWcvbmV0d29yay1zY3JpcHRzL2lmY2ZnLWVuczFmMQogIFRZUEU9RXRoZXJuZXQKICBERVZJQ0U9ZW5zMWYxCiAgQk9PVFBST1RPPW5vbmUKICBPTkJPT1Q9eWVzCiAgTUFTVEVSPWJvbmQwCiAgU0xBVkU9eWVzCiAgRU9GCgogIHRvdWNoIC92YXIvbGliL2JvbmRzLWNvbmZpZ3VyZWQuc3RhbXAKZmkK
+        path: /usr/local/bin/add-mac.sh
+        filesystem: root
+        mode: 0755
+      - contents:
+          source: data:;base64,W21haW5dCiMgRG8gbm90IGRvIGF1dG9tYXRpYyAoREhDUC9TTEFBQykgY29uZmlndXJhdGlvbiBvbiBldGhlcm5ldCBkZXZpY2VzCiMgd2l0aCBubyBvdGhlciBtYXRjaGluZyBjb25uZWN0aW9ucy4Kbm8tYXV0by1kZWZhdWx0PSoKIyBJZ25vcmUgdGhlIGNhcnJpZXIgKGNhYmxlIHBsdWdnZWQgaW4pIHN0YXRlIHdoZW4gYXR0ZW1wdGluZyB0bwojIGFjdGl2YXRlIHN0YXRpYy1JUCBjb25uZWN0aW9ucy4KaWdub3JlLWNhcnJpZXI9Kgo=
+        path: /etc/NetworkManager/conf.d/98-disable.conf
+        filesystem: root
+        mode: 0755
+    systemd:
+      units:
+      - contents: &quot;[Unit]\nDescription=Configure BOND\nAfter=ignition-firstboot-complete.service\nBefore=nodeip-configuration.service kubelet.service crio.service\n\n[Service]\nType=oneshot\nExecStart=/usr/local/bin/add-mac.sh\n\n[Install]\nWantedBy=multi-user.target&quot;
+        enabled: true
+        name: set-bond-mac.service
+</code></pre><h2 id="automating-this-solution">Automating this solution</h2>
+<p>In the above examples we have to hand write the script, hand write the systemd unit file, hand write the NetworkManager conf, encrypt the script and NetworkManager conf, and finally hand write the machine config using the encrypted and non-encrypted data. If you would like to see an automated way to do all of this you can <a href="https://github.com/ddreggors/ocp-ansible-roles/tree/main/roles/bonding">take a look at my ansible ocp interface bonding role</a>. This role will do all of the heavy lifting for you, all you have do is provided it a config file with the values needed to build your interfaces. Please note that the role is for example only and not intended to be used 100% as is. You will want to modify the example and make it fit your needs.</p>
+</div>
+				
+				<footer class="entry__footer">
+					
+<div class="entry__tags">
+			<a class="entry__tag btn" href="/tags/technology/">technology</a>
+			<a class="entry__tag btn" href="/tags/blog/">blog</a>
+</div>
+					
+				</footer>
+				
+			</article>
+		</div>
+	</main>
+	
+	
+
+
+
+	
+
+	</div>
+	<footer class="footer">
+	<div class="footer__copyright">© 2021 David Dreggors. <span class="footer__copyright-credits">Powered by <a href="https://gohugo.io/" rel="nofollow noopener" target="_blank">Hugo</a> and <a href="https://github.com/vimux/binario" rel="nofollow noopener" target="_blank">Binario</a> theme.</span></div>
+</footer>
+</body>
+</html>

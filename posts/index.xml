@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>David Dreggors</title>
-    <link>https://ddreggors.github.io/</link>
-    <description>Recent content on David Dreggors</description>
+    <title>Posts on David Dreggors</title>
+    <link>https://ddreggors.github.io/posts/</link>
+    <description>Recent content in Posts on David Dreggors</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <managingEditor>david.dreggors@redhat.com (David Dreggors)</managingEditor>
     <webMaster>david.dreggors@redhat.com (David Dreggors)</webMaster>
-    <lastBuildDate>Sun, 06 Jun 2021 21:13:22 -0400</lastBuildDate><atom:link href="https://ddreggors.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sun, 06 Jun 2021 21:13:22 -0400</lastBuildDate><atom:link href="https://ddreggors.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Bonding With OpenShift</title>
       <link>https://ddreggors.github.io/posts/bonding-with-ocp/</link>
