@@ -8,13 +8,23 @@
     <language>en-us</language>
     <managingEditor>ddreggors@redhat.com (David Dreggors)</managingEditor>
     <webMaster>ddreggors@redhat.com (David Dreggors)</webMaster>
-    <lastBuildDate>Thu, 27 May 2021 08:49:31 -0400</lastBuildDate><atom:link href="https://ddreggors.github.io/tags/technology/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sun, 06 Jun 2021 21:13:22 -0400</lastBuildDate><atom:link href="https://ddreggors.github.io/tags/technology/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Bonding With OpenShift</title>
+      <link>https://ddreggors.github.io/posts/bonding-with-ocp/</link>
+      <pubDate>Sun, 06 Jun 2021 21:13:22 -0400</pubDate>
+      <author>ddreggors@redhat.com (David Dreggors)</author>
+      <guid>https://ddreggors.github.io/posts/bonding-with-ocp/</guid>
+      <description>Sometimes we just want to bond with OpenShift&amp;hellip; David Dreggors ddreggors@redhat.com 2021-06-06
+The issues You may find yourself needing to customize your nodes network devices, this will often mean that you require interfaces (nic) bonding. On a standalone Linux host this is pretty straight forward, however managing your cluster nodes is not as easy as logging in and changing the interfaces. OpenShift handles changes on the nodes via machine configs and the machine config operator.</description>
+    </item>
+    
     <item>
       <title>Hello World</title>
-      <link>https://ddreggors.github.io/post/hello-world/</link>
+      <link>https://ddreggors.github.io/posts/hello-world/</link>
       <pubDate>Thu, 27 May 2021 08:49:31 -0400</pubDate>
       <author>ddreggors@redhat.com (David Dreggors)</author>
-      <guid>https://ddreggors.github.io/post/hello-world/</guid>
+      <guid>https://ddreggors.github.io/posts/hello-world/</guid>
       <description>Hello World David Dreggors ddreggors@redhat.com 2021-05-27
 The title, as cliché as it is in the software world, still seems fitting. After all this blog post is my first here and the internet is global, so it is my introduction to the world. Add to that the fact that most projects today start with a Hello World example. So here is mine.
 I have spent the better part of my life dedicated to computers (hardware, software, and the use of).</description>
