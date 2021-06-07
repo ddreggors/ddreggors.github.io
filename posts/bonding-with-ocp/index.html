@@ -11,17 +11,17 @@
 	<link rel="stylesheet" href="/css/bundle.css">
 	<link rel="icon" href="/icons/16.png" sizes="16x16" type="image/png">
 	<link rel="icon" href="/icons/32.png" sizes="32x32" type="image/png">
-
+		
 </head>
 <body class="body kind-page">
 	<header class="header">
 	<a class="logo" href="/">David Dreggors</a>
-
+	
 </header>
 	<div class="primary">
-
+	
 	<main class="main">
-
+		
 		<div class="single block">
 			<article class="entry">
 				<h1 class="entry__title">Bonding With OpenShift</h1>
@@ -49,7 +49,7 @@
 </nav>
 </details>
 				<div class="entry__content"><h1 id="sometimes-we-just-want-to-bond-with-openshift">Sometimes we just want to bond with OpenShift&hellip;</h1>
-<p>David Dreggors <a href="mailto:ddreggors@redhat.com">ddreggors@redhat.com</a>
+<p>David Dreggors <a href="mailto:david.dreggors@redhat.com">david.dreggors@redhat.com</a>
 2021-06-06</p>
 <h2 id="the-issues">The issues</h2>
 <p>You may find yourself needing to customize your nodes network devices, this will often mean that you require interfaces (nic) bonding. On a standalone Linux host this is pretty straight forward, however managing your cluster nodes is not as easy as logging in and changing the interfaces. OpenShift handles changes on the nodes via machine configs and the machine config operator. This means you now need to understand some of the problems we face&hellip;</p>
@@ -228,25 +228,25 @@ spec:
 </code></pre><h2 id="automating-this-solution">Automating this solution</h2>
 <p>In the above examples we have to hand write the script, hand write the systemd unit file, hand write the NetworkManager conf, encrypt the script and NetworkManager conf, and finally hand write the machine config using the encrypted and non-encrypted data. If you would like to see an automated way to do all of this you can <a href="https://github.com/ddreggors/ocp-ansible-roles/tree/main/roles/bonding">take a look at my ansible ocp interface bonding role</a>. This role will do all of the heavy lifting for you, all you have do is provided it a config file with the values needed to build your interfaces. Please note that the role is for example only and not intended to be used 100% as is. You will want to modify the example and make it fit your needs.</p>
 </div>
-
+				
 				<footer class="entry__footer">
-
+					
 <div class="entry__tags">
 			<a class="entry__tag btn" href="/tags/technology/">technology</a>
 			<a class="entry__tag btn" href="/tags/blog/">blog</a>
 </div>
-
+					
 				</footer>
-
+				
 			</article>
 		</div>
 	</main>
+	
+	
 
 
 
-
-
-
+	
 
 	</div>
 	<footer class="footer">

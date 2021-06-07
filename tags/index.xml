@@ -6,14 +6,14 @@
     <description>Recent content in Tags on David Dreggors</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <managingEditor>ddreggors@redhat.com (David Dreggors)</managingEditor>
-    <webMaster>ddreggors@redhat.com (David Dreggors)</webMaster>
+    <managingEditor>david.dreggors@redhat.com (David Dreggors)</managingEditor>
+    <webMaster>david.dreggors@redhat.com (David Dreggors)</webMaster>
     <lastBuildDate>Sun, 06 Jun 2021 21:13:22 -0400</lastBuildDate><atom:link href="https://ddreggors.github.io/tags/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>blog</title>
       <link>https://ddreggors.github.io/tags/blog/</link>
       <pubDate>Sun, 06 Jun 2021 21:13:22 -0400</pubDate>
-      <author>ddreggors@redhat.com (David Dreggors)</author>
+      <author>david.dreggors@redhat.com (David Dreggors)</author>
       <guid>https://ddreggors.github.io/tags/blog/</guid>
       <description></description>
     </item>
@@ -22,7 +22,7 @@
       <title>technology</title>
       <link>https://ddreggors.github.io/tags/technology/</link>
       <pubDate>Sun, 06 Jun 2021 21:13:22 -0400</pubDate>
-      <author>ddreggors@redhat.com (David Dreggors)</author>
+      <author>david.dreggors@redhat.com (David Dreggors)</author>
       <guid>https://ddreggors.github.io/tags/technology/</guid>
       <description></description>
     </item>
