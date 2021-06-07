@@ -11,17 +11,17 @@
 	<link rel="stylesheet" href="/css/bundle.css">
 	<link rel="icon" href="/icons/16.png" sizes="16x16" type="image/png">
 	<link rel="icon" href="/icons/32.png" sizes="32x32" type="image/png">
-		
+
 </head>
 <body class="body kind-page">
 	<header class="header">
 	<a class="logo" href="/">David Dreggors</a>
-	
+
 </header>
 	<div class="primary">
-	
+
 	<main class="main">
-		
+
 		<div class="single block">
 			<article class="entry">
 				<h1 class="entry__title">Bonding With OpenShift</h1>
@@ -128,7 +128,7 @@ ExecStart=/usr/local/bin/add-mac.sh
 WantedBy=multi-user.target
 
 </code></pre><h3 id="only-change-when-needed">Only change when needed</h3>
-<p>Awesome&hellip; now we add a systemd service to our machine config and all is well right? Unless we consider the fact that this called on every reboot and rebuild these files, so what can we do to make it run only once? Simple, have the script create a stub file on completion and place the interface creation in an if block that checks for that file&hellip;</p>
+<p>Awesome&hellip; now we add a systemd service to our machine config and all is well right? Unless we consider the fact that this script is called on every reboot and rebuilds these files every time it runs. So what can we do to make it run only once? Simple, have the script create a stub file on completion and place the interface creation in an if block that checks for that stub file&hellip;</p>
 <p><em>Example add-mac.sh script</em></p>
 <pre><code>#!/bin/bash
 
@@ -228,25 +228,25 @@ spec:
 </code></pre><h2 id="automating-this-solution">Automating this solution</h2>
 <p>In the above examples we have to hand write the script, hand write the systemd unit file, hand write the NetworkManager conf, encrypt the script and NetworkManager conf, and finally hand write the machine config using the encrypted and non-encrypted data. If you would like to see an automated way to do all of this you can <a href="https://github.com/ddreggors/ocp-ansible-roles/tree/main/roles/bonding">take a look at my ansible ocp interface bonding role</a>. This role will do all of the heavy lifting for you, all you have do is provided it a config file with the values needed to build your interfaces. Please note that the role is for example only and not intended to be used 100% as is. You will want to modify the example and make it fit your needs.</p>
 </div>
-				
+
 				<footer class="entry__footer">
-					
+
 <div class="entry__tags">
 			<a class="entry__tag btn" href="/tags/technology/">technology</a>
 			<a class="entry__tag btn" href="/tags/blog/">blog</a>
 </div>
-					
+
 				</footer>
-				
+
 			</article>
 		</div>
 	</main>
-	
-	
 
 
 
-	
+
+
+
 
 	</div>
 	<footer class="footer">
