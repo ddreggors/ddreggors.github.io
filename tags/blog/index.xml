@@ -8,7 +8,17 @@
     <language>en-us</language>
     <managingEditor>david.dreggors@redhat.com (David Dreggors)</managingEditor>
     <webMaster>david.dreggors@redhat.com (David Dreggors)</webMaster>
-    <lastBuildDate>Sun, 06 Jun 2021 21:13:22 -0400</lastBuildDate><atom:link href="https://ddreggors.github.io/tags/blog/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sat, 26 Jun 2021 13:31:00 -0400</lastBuildDate><atom:link href="https://ddreggors.github.io/tags/blog/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Secrets and how to handle them</title>
+      <link>https://ddreggors.github.io/posts/its-a-secret/</link>
+      <pubDate>Sat, 26 Jun 2021 13:31:00 -0400</pubDate>
+      <author>david.dreggors@redhat.com (David Dreggors)</author>
+      <guid>https://ddreggors.github.io/posts/its-a-secret/</guid>
+      <description>Shhhh it&amp;rsquo;s a secret&amp;hellip; There are often times we want to incorporate items like passwords or other sensitive data in our code or repositories. This is generally a bad idea even in provate repos or server filesystems. In fact there are teams of security specialists in most companies that watch for this practice and act rather harshly when identified.
+While most of us have done this (even if only at home in our labs or test code), there really shouldn&amp;rsquo;t be a reason to do this.</description>
+    </item>
+    
     <item>
       <title>Bonding With OpenShift</title>
       <link>https://ddreggors.github.io/posts/bonding-with-ocp/</link>

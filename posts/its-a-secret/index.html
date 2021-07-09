@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html class="no-js" lang="en-us">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="theme-color" content="#1b1b1b">
+	<title>Secrets and how to handle them | David Dreggors</title>
+	<script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script>
+	<meta name="description" content="">
+	<link rel="stylesheet" href="/css/bundle.css">
+	<link rel="icon" href="/icons/16.png" sizes="16x16" type="image/png">
+	<link rel="icon" href="/icons/32.png" sizes="32x32" type="image/png">
+		
+</head>
+<body class="body kind-page">
+	<header class="header">
+	<a class="logo" href="/">David Dreggors</a>
+	
+</header>
+	<div class="primary">
+	
+	<main class="main">
+		
+		<div class="single block">
+			<article class="entry">
+				<h1 class="entry__title">Secrets and how to handle them</h1>
+<details class="entry__toc toc" >
+	<summary class="toc__title">Table of Contents</summary>
+	<nav id="TableOfContents">
+  <ul>
+    <li><a href="#tools-to-handle-managing-secrets">Tools to handle managing secrets</a>
+      <ul>
+        <li><a href="#hashicorp-vault-clientserver">HashiCorp Vault (client/server)</a></li>
+        <li><a href="#git-secrets-git-plugin-client">Git Secrets (git plugin client)</a></li>
+        <li><a href="#conjur-clientserver">Conjur (client/server)</a></li>
+      </ul>
+    </li>
+    <li><a href="#which-tool-should-i-use">Which tool should I use?</a></li>
+  </ul>
+</nav>
+</details>
+				<div class="entry__content"><h1 id="shhhh-its-a-secret">Shhhh it&rsquo;s a secret&hellip;</h1>
+<p>There are often times we want to incorporate items like passwords or other sensitive data in our code or repositories. This is generally a bad idea even in provate repos or server filesystems. In fact there are teams of security specialists in most companies that watch for this practice and act rather harshly when identified.</p>
+<p>While most of us have done this (even if only at home in our labs or test code), there really shouldn&rsquo;t be a reason to do this. There are tons of fairly easy ways to manage secrets without exposing yourself, your company, or your data to bad actors.</p>
+<p>For more on why to avoid this, you can also take a look at the following links:</p>
+<ul>
+<li><a href="https://blog.gitguardian.com/secrets-credentials-api-git/">Why secrets in git are such a problem</a></li>
+<li><a href="https://www.datree.io/resources/secrets-management-aws">What are secrets, and why should I secure them?</a></li>
+</ul>
+<h2 id="tools-to-handle-managing-secrets">Tools to handle managing secrets</h2>
+<p>As mentioned above there are ways to manage secrets that range from small, free, and very easy to use all the way up to large, cumbersome, and costly. For our purposes I think we can showcase a couple from the easy/free category.</p>
+<p><strong>References</strong></p>
+<ul>
+<li><a href="https://www.vaultproject.io/">HashiCorp Vault</a></li>
+<li><a href="https://git-secret.io/">Git Secrets</a></li>
+<li><a href="https://www.conjur.org/">Conjur</a></li>
+</ul>
+<h3 id="hashicorp-vault-clientserver">HashiCorp Vault (client/server)</h3>
+<p>HashiCorp Vault is a standalone solution that you deploy as a server in your network (<a href="https://learn.hashicorp.com/tutorials/vault/getting-started-install?in=vault/getting-started">See the install guide</a>). Vault is not the most difficult secret manager you can install but it does take a bit or reading up at first. Vault even has a <a href="https://learn.hashicorp.com/tutorials/vault/getting-started-dev-server?in=vault/getting-started">dev server mode</a> so you can start moving right away. The idea is that vault is modular. You can enable just what you intend to use. You pick the secrets engine to use, the auth method to use (token or user), etc&hellip;</p>
+<p>Also less than intuitive would be the concept of <a href="https://learn.hashicorp.com/tutorials/vault/getting-started-deploy?in=vault/getting-started#seal-unseal">sealing/unsealing</a> your vault, one might assume that the secrets are already &ldquo;sealed&rdquo; in the vault and are unsealed when you request your secret using your authentication token or user/pass. This is not the case with vault, after install or after it has been sealed by an authenticated user you must unseal your vault before you can access your secrets.</p>
+<p>See Vault&rsquo;s <a href="https://learn.hashicorp.com/collections/vault/getting-started">Getting Started</a> guide for more on installing and using Vault</p>
+<h3 id="git-secrets-git-plugin-client">Git Secrets (git plugin client)</h3>
+<p>Unlike the other tools mentioned here, git-secret (and git-encrypt) are plugins fot git that we install locally. This tool makes it very easy to work right inside your git repo and not modify your codebase or pipeline to make calls to external secret manager APIs or URLs. Since git-secret relies on gpg encryption (and gpg keys) all users of the repository that you with to work with secrets must have a gpg key imported into the gpg keyring and the we <code>tell</code> (<code>git secret tell &lt;email from key&gt;</code>) git secreats to add the user.</p>
+<p>The concept here is that we would create a secret in the repo, tell git to <code>add</code> (<code>git secret add &lt;FILE&gt;</code>) the file to your list of files to be managed as secrets, then <code>hide</code> (<code>git secret hide -d</code>) your secret before you add and commit it in git. The <code>hide</code> sub-command creates an encrypted version of file with the <code>.secret</code> extension and deletes the original. To use your secrets later you can either <code>cat</code> (<code>git secret cat &lt;file&gt;</code>) the secret or <code>reveal</code> (<code>git secret reveal</code>) all secrets.</p>
+<p>See the git-secret <a href="https://git-secret.io/">documentation</a> for more on installing and using git-secret</p>
+<h3 id="conjur-clientserver">Conjur (client/server)</h3>
+<p>Much like HashiCorp Vault, Conjur is a stand alone, self deployed server.  It is fairly easy to manage and you use also authenticate to an API to access it. One major difference here is that CyberArk chose to containerize this solution and the only way to deploy it is to use docker-compose. This just means you have a dependency on docker and docker compose.</p>
+<p>See Conjur&rsquo;s <a href="https://www.conjur.org/get-started/quick-start/">Quick Start</a> guide for more on installing</p>
+<h2 id="which-tool-should-i-use">Which tool should I use?</h2>
+<p>Which one of these tools to use depends on several factors:</p>
+<ol>
+<li>Do you need dynamic access to these secrets from your code at run time?</li>
+<li>Do you have access to a host/vm/ec2 instance to install a vault or conjur server?</li>
+<li>If the answer to 2 is No, then can a server be run or used from localhost (your laptop/desktop)?</li>
+</ol>
+<p>If 1 AND either 2 or 3 is YES, then you will want vault, cojur, or another stand alone secret/vault server. Having a URL or an API to access secrets dynamically is often the only answer. However, in many cases one might choose to store secrets directly in git to keep moving while waiting for vault access. Specifically we see this in fast moving dev environments where secrets are more fluid and workflow patterns do not currently allow for access to a vault.</p>
+<p>The bottom line is, as always&hellip; choose what fits your needs best but do choose to be secure :-)</p>
+</div>
+				
+				<footer class="entry__footer">
+					
+<div class="entry__tags">
+			<a class="entry__tag btn" href="/tags/technology/">technology</a>
+			<a class="entry__tag btn" href="/tags/blog/">blog</a>
+</div>
+					
+				</footer>
+				
+			</article>
+		</div>
+	</main>
+	
+	
+
+
+
+	
+
+	</div>
+	<footer class="footer">
+	<div class="footer__copyright">© 2021 David Dreggors. <span class="footer__copyright-credits">Powered by <a href="https://gohugo.io/" rel="nofollow noopener" target="_blank">Hugo</a> and <a href="https://github.com/vimux/binario" rel="nofollow noopener" target="_blank">Binario</a> theme.</span></div>
+</footer>
+</body>
+</html>
